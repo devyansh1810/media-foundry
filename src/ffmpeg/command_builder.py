@@ -72,38 +72,51 @@ class FFmpegCommandBuilder:
 
         # Video speed filter
         video_filter = f"setpts={1/options.speed_factor}*PTS"
-
-        # Audio speed filter
-        if options.maintain_pitch:
-            audio_filter = f"atempo={options.speed_factor}"
-            # atempo only supports 0.5-2.0, so chain for larger factors
-            if options.speed_factor > 2.0:
-                count = 0
-                temp_factor = options.speed_factor
-                audio_filter = ""
-                while temp_factor > 2.0:
-                    audio_filter += "atempo=2.0,"
-                    temp_factor /= 2.0
-                    count += 1
-                if temp_factor > 1.0:
-                    audio_filter += f"atempo={temp_factor}"
-                audio_filter = audio_filter.rstrip(",")
-            elif options.speed_factor < 0.5:
-                count = 0
-                temp_factor = options.speed_factor
-                audio_filter = ""
-                while temp_factor < 0.5:
-                    audio_filter += "atempo=0.5,"
-                    temp_factor /= 0.5
-                    count += 1
-                if temp_factor < 1.0:
-                    audio_filter += f"atempo={temp_factor}"
-                audio_filter = audio_filter.rstrip(",")
-        else:
-            audio_filter = f"atempo={options.speed_factor}"
-
         cmd.extend(["-filter:v", video_filter])
-        cmd.extend(["-filter:a", audio_filter])
+
+        # Check if video has audio (set by job manager)
+        has_audio = getattr(options, 'has_audio', True)
+
+        if has_audio:
+            # Audio speed filter
+            if options.maintain_pitch:
+                audio_filter = f"atempo={options.speed_factor}"
+                # atempo only supports 0.5-2.0, so chain for larger factors
+                if options.speed_factor > 2.0:
+                    count = 0
+                    temp_factor = options.speed_factor
+                    audio_filter = ""
+                    while temp_factor > 2.0:
+                        audio_filter += "atempo=2.0,"
+                        temp_factor /= 2.0
+                        count += 1
+                    if temp_factor > 1.0:
+                        audio_filter += f"atempo={temp_factor}"
+                    audio_filter = audio_filter.rstrip(",")
+                elif options.speed_factor < 0.5:
+                    count = 0
+                    temp_factor = options.speed_factor
+                    audio_filter = ""
+                    while temp_factor < 0.5:
+                        audio_filter += "atempo=0.5,"
+                        temp_factor /= 0.5
+                        count += 1
+                    if temp_factor < 1.0:
+                        audio_filter += f"atempo={temp_factor}"
+                    audio_filter = audio_filter.rstrip(",")
+
+                cmd.extend(["-filter:a", audio_filter])
+            else:
+                # No pitch correction - just change speed
+                audio_filter = f"atempo={options.speed_factor}"
+                cmd.extend(["-filter:a", audio_filter])
+
+            # Re-encode both video and audio
+            cmd.extend(["-c:v", "libx264", "-c:a", "aac"])
+        else:
+            # Video only - no audio filters
+            cmd.extend(["-c:v", "libx264", "-an"])
+
         cmd.extend(["-y", str(output_path)])
 
         return cmd

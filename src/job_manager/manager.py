@@ -199,6 +199,24 @@ class JobManager:
             job.update_progress(10, JobStatus.PROCESSING)
             await self._notify_progress(job, 10, "preparing")
 
+            # Get input metadata for validation
+            input_metadata = await get_media_metadata(input_path)
+
+            # Validate audio stream exists for audio extraction
+            if job.operation == JobOperation.EXTRACT_AUDIO:
+                logger.info(f"Validating audio stream", extra={"job_id": job.job_id})
+                if not input_metadata.audio_codec:
+                    raise ValueError(
+                        "This media file does not contain any audio stream. "
+                        "Audio extraction is not possible for video-only files."
+                    )
+
+            # For speed operations on video-only files, disable audio processing
+            if job.operation == JobOperation.SPEED and not input_metadata.audio_codec:
+                logger.info(f"Video has no audio, disabling audio filters", extra={"job_id": job.job_id})
+                # Set maintain_pitch to None to indicate no audio
+                job.options.has_audio = False
+
             command = self.command_builder.build_command(
                 job.operation, input_path, output_path, job.options
             )

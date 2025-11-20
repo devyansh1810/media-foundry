@@ -1,22 +1,20 @@
 # Multi-stage build for efficient image
 FROM python:3.11-slim as builder
 
-# Install build dependencies and uv
+# Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
-    curl \
-    && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && rm -rf /var/lib/apt/lists/*
 
-ENV PATH="/root/.cargo/bin:$PATH"
-
 # Copy project files
-COPY pyproject.toml .
+COPY pyproject.toml README.md ./
 
-# Install dependencies with uv
-RUN uv venv /opt/venv && \
-    . /opt/venv/bin/activate && \
-    uv pip install --no-cache -e .
+# Create virtual environment and install dependencies
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir fastapi websockets pydantic pydantic-settings \
+    uvicorn aiofiles python-multipart httpx python-dotenv aio-pika
 
 # Production stage
 FROM python:3.11-slim
