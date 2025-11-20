@@ -1,0 +1,43 @@
+doramee/
+├── src/
+│   ├── __init__.py
+│   ├── main.py                    # Entry point
+│   ├── config/
+│   │   ├── __init__.py
+│   │   └── settings.py            # Pydantic settings
+│   ├── logging/
+│   │   ├── __init__.py
+│   │   └── logger.py              # Structured logging
+│   ├── websocket/
+│   │   ├── __init__.py
+│   │   ├── models.py              # All Pydantic models
+│   │   └── server.py              # WebSocket server
+│   ├── job_manager/
+│   │   ├── __init__.py
+│   │   ├── job.py                 # Job model
+│   │   └── manager.py             # Queue & workers
+│   ├── ffmpeg/
+│   │   ├── __init__.py
+│   │   ├── command_builder.py    # Build FFmpeg commands
+│   │   ├── runner.py              # Execute FFmpeg
+│   │   └── metadata.py            # Extract metadata
+│   └── utils/
+│       ├── __init__.py
+│       └── health.py              # Health endpoint
+├── tests/
+│   ├── __init__.py
+│   ├── test_models.py
+│   ├── test_ffmpeg_builder.py
+│   └── test_job_manager.py
+├── examples/
+│   └── client_example.py          # Usage examples
+├── pyproject.toml                 # Project config (uv)
+├── Dockerfile                     # Container build
+├── docker-compose.yml             # Orchestration
+├── Makefile                       # Commands
+├── .env.example                   # Config template
+├── .env                           # Local config
+├── README.md                      # Full docs
+├── QUICKSTART.md                  # Quick start
+├── ARCHITECTURE.md                # System design
+└── PROJECT_SUMMARY.md             # Overview
